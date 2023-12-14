@@ -1,7 +1,6 @@
-import sys
 import config
 import math
-
+import functools
 # TODO: Reorder functions
 
 class HalfedgeMesh:
@@ -53,14 +52,14 @@ class HalfedgeMesh:
 
                 # TODO: build OBJ, PLY parsers
                 parser_dispatcher = {"OFF": self.parse_off}
-                                      
+                #print(parser_dispatcher)                       
                 return parser_dispatcher[first_line](file)
 
         except IOError as e:
-            print "I/O error({0}): {1}".format(e.errno, e.strerror)
+            print ("I/O error({0}): {1}").format(e.errno, e.strerror)
             return
         except ValueError as e:
-            print "Value error: {0}:".format(e)
+            print ("Value error: {0}:").format(e)
             return
 
     def read_off_vertices(self, file_object, number_vertices):
@@ -72,12 +71,12 @@ class HalfedgeMesh:
         vertices = []
 
         # Read all the vertices in
-        for index in xrange(number_vertices):
+        for index in range(number_vertices):
             line = file_object.readline().split()
-
+            #print(line)
             try:
                 # convert strings to floats
-                line = map(float, line)
+                line = list(map(float, line))
             except ValueError as e:
                 raise ValueError("vertices " + str(e))
 
@@ -117,11 +116,11 @@ class HalfedgeMesh:
         #TODO Check if vertex index out of bounds
 
         # For each facet
-        for index in xrange(number_facets):
+        for index in range(number_facets):
             line = file_object.readline().split()
 
             # convert strings to ints
-            line = map(int, line)
+            line = list(map(int, line))
 
             # TODO: make general to support non-triangular meshes
             # Facets vertices are in counter-clockwise order
@@ -132,11 +131,11 @@ class HalfedgeMesh:
             # verts = [1,2,3] then zip(verts, verts[1:]) = [(1,2),(2,3)]
             # note: we skip line[0] because it represents the number of vertices
             # in the facet.
-            all_facet_edges = zip(line[1:], line[2:])
+            all_facet_edges = list(zip(line[1:], line[2:]))
             all_facet_edges.append((line[3], line[1]))
 
             # For every halfedge around the facet
-            for i in xrange(3):
+            for i in range(3):
                 Edges[all_facet_edges[i]] = Halfedge()
                 Edges[all_facet_edges[i]].facet = facet
                 Edges[all_facet_edges[i]].vertex = vertices[
@@ -146,7 +145,7 @@ class HalfedgeMesh:
 
             facet.halfedge = Edges[all_facet_edges[0]]
 
-            for i in xrange(3):
+            for i in range(3):
                 Edges[all_facet_edges[i]].next = Edges[
                     all_facet_edges[(i + 1) % 3]]
                 Edges[all_facet_edges[i]].prev = Edges[
@@ -170,8 +169,8 @@ class HalfedgeMesh:
         facets, halfedges, vertices = [], [], []
 
         # TODO Make ability to discard # lines
-        vertices_faces_edges_counts = map(int, file_object.readline().split())
-
+        vertices_faces_edges_counts = list(map(int, file_object.readline().split()))
+        print(vertices_faces_edges_counts)
         number_vertices = vertices_faces_edges_counts[0]
         vertices = self.read_off_vertices(file_object, number_vertices)
 
@@ -180,7 +179,7 @@ class HalfedgeMesh:
                                                       number_facets, vertices)
 
         i = 0
-        for key, value in Edges.iteritems():
+        for key, value in Edges.items():
             value.index = i
             halfedges.append(value)
             i += 1
@@ -405,7 +404,7 @@ def allclose(v1, v2):
 
     elementwise_compare = map(
         (lambda x, y: abs(x - y) < config.EPSILON), v1, v2)
-    return reduce((lambda x, y: x and y), elementwise_compare)
+    return functools.reduce((lambda x, y: x and y), elementwise_compare)
 
 
 def make_iterable(obj):
@@ -432,7 +431,7 @@ def dot(v1, v2):
     Return v1 dot v2
     """
     elementwise_multiply = map((lambda x, y: x * y), v1, v2)
-    return reduce((lambda x, y: x + y), elementwise_multiply)
+    return functools.reduce((lambda x, y: x + y), elementwise_multiply)
 
 
 def norm(vec):
@@ -440,7 +439,7 @@ def norm(vec):
 
     vec - a 3d vector expressed as a list of 3 floats.
     """
-    return math.sqrt(reduce((lambda x, y: x + y * y), vec, 0.0))
+    return math.sqrt(functools.reduce((lambda x, y: x + y * y), vec, 0.0))
 
 
 def normalize(vec):
@@ -451,7 +450,7 @@ def normalize(vec):
     Return normalized vector
     """
     if norm(vec) < 1e-6:
-        return [0 for i in xrange(len(vec))]
+        return [0 for i in range(len(vec))]
     return map(lambda x: x / norm(vec), vec)
 
 
@@ -472,4 +471,4 @@ def create_vector(p1, p2):
 
     Return a list [x,y,z] for the coordinates of vector
     """
-    return map((lambda x,y: x-y), p2, p1)
+    return list(map((lambda x,y: x-y), p2, p1))

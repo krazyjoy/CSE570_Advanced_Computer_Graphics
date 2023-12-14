@@ -1,7 +1,5 @@
 import mesh
 import math
-import numpy as np
-from collections import defaultdict
 
 
 def get_interior_odd_vertex(halfedge):
